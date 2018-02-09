@@ -11,6 +11,12 @@
 
 #define MOVE_POSSIBLE   1
 #define MOVE_IMPOSSIBLE 0
+#define MOVE_IMPOSSIBLE_USED -1
+#define MOVE_IMPOSSIBLE_OOFB -2
+#define MOVE_IMPOSSIBLE_OCUP -3
+#define MOVE_IMPOSSIBLE_EDGE -4
+#define MOVE_IMPOSSIBLE_FRST -5
+#define MOVE_IMPOSSIBLE_CORN -6
 
 extern const int block_a[5][5];
 extern const int block_b[5][5];
