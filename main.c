@@ -3,7 +3,6 @@
 ------------------------------------*/
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdio_ext.h>
 #include <string.h>
 
@@ -77,34 +76,35 @@ int play_move(int move_x, int move_y, char piece, int rot, int board[14][14], in
             for(int j=0;j<5;j++)
             {
                 if (strchr(pieces_left, piece) == NULL) // Move has been used up.
-                    return MOVE_IMPOSSIBLE;
+                    return MOVE_IMPOSSIBLE_USED;
                 else if (temp[i][j] != 0 && (((move_x-2+j)>0xE || (move_y-2+i)>0xE) || ((move_x-3+j)<0 || (move_y-3+i)<0))) // Out of bounds.
-                    return MOVE_IMPOSSIBLE;
+                    return MOVE_IMPOSSIBLE_OOFB;
                 else if (temp[i][j] != 0 && board[move_y-3+i][move_x-3+j] != 0) // Occupying other block.
-                    return MOVE_IMPOSSIBLE;
+                    return MOVE_IMPOSSIBLE_OCUP;
                 else if (temp[i][j] != 0) // Connecting edges with same color
                     for (int k=-1;k<2;k+=2)
                     {
                         if ((move_y-3+i+k >= 0 && move_y-3+i+k <= 0xE) && board[move_y-3+i+k][move_x-3+j] == player)
-                            return MOVE_IMPOSSIBLE;
+                            return MOVE_IMPOSSIBLE_EDGE;
                         if ((move_x-3+j+k >= 0 && move_x-3+j+k <= 0xE) && board[move_y-3+i][move_x-3+j+k] == player)
-                            return MOVE_IMPOSSIBLE;
+                            return MOVE_IMPOSSIBLE_EDGE;
                     }
 
-                if ((turn == 1 || turn == 2) && temp[i][j] != 0 && (move_y-2+i == move_x-2+j)) // Starting in the correct position
+                if ((turn == 1 || turn == 2) && check_start == 0 && temp[i][j] != 0 && (move_y-2+i == move_x-2+j)) // Starting in the correct position
                 {
                     if (move_x-2+j == (turn==1?5:0xA))
                         check_start = 1;
                 }
-                else if (turn > 2 && temp[i][j] != 0)
+                else if (turn > 2 && check_corner == 0 && temp[i][j] != 0) // Corner is connecting
                     for (int k=-1;k<2;k+=2)
                         if (board[move_y-3+i+k][move_x-3+j-1] == player || board[move_y-3+i+k][move_x-3+j+1] == player)
                             check_corner = 1;
             }
 
-
-        if (((turn == 1 || turn == 2) && check_start == 0) || (turn > 2 && check_corner == 0))
-            return MOVE_IMPOSSIBLE;
+        if (((turn == 1 || turn == 2) && check_start == 0))
+            return MOVE_IMPOSSIBLE_FRST;
+        if (turn > 2 && check_corner == 0)
+            return MOVE_IMPOSSIBLE_CORN;
 
 
         // Play the move
@@ -186,24 +186,44 @@ int main()
 
         debug_draw_screen(board);
 
-        printf("Turn = %d\n", turn);
-        printf("Player 1's score = %d\n", score1);
-        printf("Player 2's score = %d\n\n", score2);
-        printf("Possible moves = ");
+        debug_message("Turn = ", turn, 0, 0);
+        debug_message("\n", 0, 0, 0);
+        debug_message("Player 1's score = ", score1, 0, 0);
+        debug_message("\n", 0, 0, 0);
+        debug_message("Player 2's score = ", score2, 0, 0);
+        debug_message("\n", 0, 0, 0);
+        debug_message("\n", 0, 0, 0);
+        debug_message("Possible moves = ", 0, 0, 0);
         for (int i=0;i<21;i++)
             if (player == 1)
-                printf("%c ",pieces_left1[i]);
+                debug_message("", pieces_left1[i], 1, 0);
             else
-                printf("%c ",pieces_left2[i]);
+                debug_message("", pieces_left2[i], 1, 0);
 
         if (turn == 1)
-            printf("\nPlayer 1, show me your moves (you must start at 5,5): ");
+            debug_message("\nPlayer 1, show me your moves (you must start at 5,5): ",0,0, 0);
         else if (turn == 2)
-            printf("\nPlayer 2, show me your moves (you must start at a,a): ");
+            debug_message("\nPlayer 2, show me your moves (you must start at a,a): ",0,0, 0);
         else
-            printf("\nPlayer %d, show me your moves: ", player);
+        {
+            debug_message("\n", 0, 0, 0);
+            debug_message("Player ", player, 0, 0);
+            debug_message(", show me your moves: ", 0, 0, 0);
+
+        }
+
         scanf(" %1x%1x%1c%1d", &move_x, &move_y, &piece, &rot);
-        if (play_move(move_x, move_y, piece, rot, board, turn, (player == 1 ? pieces_left1 : pieces_left2), (player == 1 ? &score1 : &score2),1) == MOVE_POSSIBLE )
-            turn++; // Increment turn if a valid move happened.
+        int my_move = play_move(move_x, move_y, piece, rot, board, turn, (player == 1 ? pieces_left1 : pieces_left2), (player == 1 ? &score1 : &score2),1);
+        switch (my_move)
+        {
+            case MOVE_POSSIBLE: turn++; break; // Increment turn if a valid move happened.
+            case MOVE_IMPOSSIBLE: debug_message("Invalid move due to unknown reasons. Tell a programmer! D:",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_EDGE: debug_message("Invalid move due to edges connecting.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_CORN: debug_message("Invalid move due to no corners connecting.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_FRST: debug_message("Invalid move due to not starting on 'S'.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_OCUP: debug_message("Invalid move due to position occupied.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_OOFB: debug_message("Invalid move due to being out of bounds.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_USED: debug_message("Invalid move due to piece being used up.",0,0,1); break; 
+        }
     }
 }
