@@ -9,8 +9,11 @@
 
 void transform_array(int piece[5][5], int rot)
 {
-
     int temp[5][5];
+
+
+    // Rotate by 90º if rot is a number that can be divided by 2
+
     for (int k = rot; k/2 > 0; k-=2)
     {
         for (int i = 0; i < 5; ++i)
@@ -21,6 +24,9 @@ void transform_array(int piece[5][5], int rot)
             for (int j = 0; j < 5; ++j)
                 piece[i][j] = temp[i][j];
     }
+
+
+    // If rot is an odd number, mirror the piece horizontally
 
     if (rot%2 != 0)
     {
