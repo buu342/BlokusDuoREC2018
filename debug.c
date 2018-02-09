@@ -8,12 +8,22 @@
   Debug functions - Remove when final
 ------------------------------------*/
 
-void debug_message(char str[100])
+void debug_message(char str[100], int variable, int ischar, int wait)
 {
     printf("%s",str);
-    char c = getchar();
-    c=getchar();
-    c++; // Stop -wall from complaining
+    if (variable!=0)
+    {
+        if (ischar!=0)
+            printf("%c ",variable);
+        else
+            printf("%d",variable);
+    }
+    if (wait == 1)
+    {
+        char c = getchar();
+        c=getchar();
+        c++; // Stop -wall from complaining
+    }
 }
 
 void debug_draw_screen(int board[14][14])
