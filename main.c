@@ -72,17 +72,22 @@ int play_move(int move_x, int move_y, char piece, int rot, int board[14][14], in
 
         int check_start=0;
         int check_corner=0;
+
+        if (strchr(pieces_left, piece) == NULL) // Move has been used up.
+            return MOVE_IMPOSSIBLE_USED;
+
         for (int i=0;i<5;i++)
             for(int j=0;j<5;j++)
             {
-                if (strchr(pieces_left, piece) == NULL) // Move has been used up.
-                    return MOVE_IMPOSSIBLE_USED;
-                else if (temp[i][j] != 0 && (((move_x-2+j)>0xE || (move_y-2+i)>0xE) || ((move_x-3+j)<0 || (move_y-3+i)<0))) // Out of bounds.
-                    return MOVE_IMPOSSIBLE_OOFB;
-                else if (temp[i][j] != 0 && board[move_y-3+i][move_x-3+j] != 0) // Occupying other block.
-                    return MOVE_IMPOSSIBLE_OCUP;
-                else if (temp[i][j] != 0) // Connecting edges with same color
-                    for (int k=-1;k<2;k+=2)
+                
+                if (temp[i][j] == 1) // Only care about checking the 1's in our temporary array.
+                {
+                    if ((((move_x-2+j)>0xE || (move_y-2+i)>0xE) || ((move_x-3+j)<0 || (move_y-3+i)<0))) // Out of bounds.
+                        return MOVE_IMPOSSIBLE_OOFB;
+                    else if (board[move_y-3+i][move_x-3+j] != 0) // Occupying other block.
+                        return MOVE_IMPOSSIBLE_OCUP;
+
+                    for (int k=-1;k<2;k+=2) // Connecting edges with same color. The for loop is to cut down on the amount of if's.
                     {
                         if ((move_y-3+i+k >= 0 && move_y-3+i+k <= 0xE) && board[move_y-3+i+k][move_x-3+j] == player)
                             return MOVE_IMPOSSIBLE_EDGE;
@@ -90,15 +95,17 @@ int play_move(int move_x, int move_y, char piece, int rot, int board[14][14], in
                             return MOVE_IMPOSSIBLE_EDGE;
                     }
 
-                if ((turn == 1 || turn == 2) && check_start == 0 && temp[i][j] != 0 && (move_y-2+i == move_x-2+j)) // Starting in the correct position
-                {
-                    if (move_x-2+j == (turn==1?5:0xA))
-                        check_start = 1;
+                    if ((turn == 1 || turn == 2) && check_start == 0 && (move_y-2+i == move_x-2+j)) // Starting in the correct position
+                    {
+                        if (move_x-2+j == (turn==1?5:0xA))
+                            check_start = 1;
+                    }
+                    else if (turn > 2 && check_corner == 0 ) // Corner is connecting
+                        for (int k=-1;k<2;k+=2)
+                            if (board[move_y-3+i+k][move_x-3+j-1] == player || board[move_y-3+i+k][move_x-3+j+1] == player)
+                                check_corner = 1;
                 }
-                else if (turn > 2 && check_corner == 0 && temp[i][j] != 0) // Corner is connecting
-                    for (int k=-1;k<2;k+=2)
-                        if (board[move_y-3+i+k][move_x-3+j-1] == player || board[move_y-3+i+k][move_x-3+j+1] == player)
-                            check_corner = 1;
+
             }
 
         if (((turn == 1 || turn == 2) && check_start == 0))
@@ -136,7 +143,22 @@ int play_move(int move_x, int move_y, char piece, int rot, int board[14][14], in
                 if (pieces_left[i] == piece)
                     pieces_left[i] = ' ';
         }
-
+        else // otherwise, just tell us how many points we'll get
+            for (int i=0;i<5;i++)
+                for(int j=0;j<5;j++)
+                    if (temp[i][j] != 0)
+                    {
+                        if (turn == 41 || turn == 42)
+                        {
+                            if (piece == 'a')
+                                (*score)+=20;
+                            else
+                                (*score)+=15;
+                        }
+                        else
+                            (*score)++;
+                    }
+             
         return MOVE_POSSIBLE;
     }
     return MOVE_IMPOSSIBLE;
@@ -201,29 +223,44 @@ int main()
                 debug_message("", pieces_left2[i], 1, 0);
 
         if (turn == 1)
-            debug_message("\nPlayer 1, show me your moves (you must start at 5,5): ",0,0, 0);
+            debug_message("\nPlayer 1, your turn (you must start at 5,5): ",0,0, 0);
         else if (turn == 2)
-            debug_message("\nPlayer 2, show me your moves (you must start at a,a): ",0,0, 0);
+            debug_message("\nPlayer 2, your turn (you must start at a,a): ",0,0, 0);
         else
         {
             debug_message("\n", 0, 0, 0);
             debug_message("Player ", player, 0, 0);
-            debug_message(", show me your moves: ", 0, 0, 0);
+            debug_message(", your turn: ", 0, 0, 0);
 
         }
 
         scanf(" %1x%1x%1c%1d", &move_x, &move_y, &piece, &rot);
-        int my_move = play_move(move_x, move_y, piece, rot, board, turn, (player == 1 ? pieces_left1 : pieces_left2), (player == 1 ? &score1 : &score2),1);
+        int my_move=0;
+        if (move_x == 0xF && move_y == 0xF)
+        {
+            int goodscore=0;
+            for(int i=0;i<14;i++)
+                for (int j=0;j<14;j++)
+                    for (int k=0;k<7;k++)
+                        if (play_move(i, j, piece, k, board, turn, (player == 1 ? pieces_left1 : pieces_left2), &goodscore, 0) == MOVE_POSSIBLE)
+                        {
+                            printf("%i %i %c %i is a valid move which will yield %d points.\n", i, j, piece, k, goodscore);
+                            goodscore = 0;
+                        }
+        }
+        else
+            my_move = play_move(move_x, move_y, piece, rot, board, turn, (player == 1 ? pieces_left1 : pieces_left2), (player == 1 ? &score1 : &score2),1);
+
         switch (my_move)
         {
             case MOVE_POSSIBLE: turn++; break; // Increment turn if a valid move happened.
-            case MOVE_IMPOSSIBLE: debug_message("Invalid move due to unknown reasons. Tell a programmer! D:",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_EDGE: debug_message("Invalid move due to edges connecting.",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_CORN: debug_message("Invalid move due to no corners connecting.",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_FRST: debug_message("Invalid move due to not starting on 'S'.",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_OCUP: debug_message("Invalid move due to position occupied.",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_OOFB: debug_message("Invalid move due to being out of bounds.",0,0,1); break; 
-            case MOVE_IMPOSSIBLE_USED: debug_message("Invalid move due to piece being used up.",0,0,1); break; 
+            case MOVE_IMPOSSIBLE: debug_message("Invalid move due to unknown reasons. Tell a programmer! D:\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_EDGE: debug_message("Invalid move due to edges connecting.\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_CORN: debug_message("Invalid move due to no corners connecting.\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_FRST: debug_message("Invalid move due to not starting on 'S'.\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_OCUP: debug_message("Invalid move due to position occupied.\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_OOFB: debug_message("Invalid move due to being out of bounds.\n",0,0,1); break; 
+            case MOVE_IMPOSSIBLE_USED: debug_message("Invalid move due to piece being used up.\n",0,0,1); break; 
         }
     }
 }
