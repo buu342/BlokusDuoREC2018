@@ -1,6 +1,6 @@
-FINAL = YES
+FINAL = NO
 
-CODEFILES = main.c blocks.c transform.c
+CODEFILES = main.c blocks.c transform.c check.c str_ar.c
 
 PROG = blokus
 
