@@ -1,19 +1,31 @@
-CODEFILES = main.c blocks.c transform.c debug.c
+FINAL = YES
+
+CODEFILES = main.c blocks.c transform.c
+
+PROG = blokus
+
+#######################################
 
 CODEHEADERS = ./*.h
 
 CODEOBJECTS = $(CODEFILES:.c=.o)
 
-FINAL = blokus
+ifeq ($(FINAL), YES)
+	DEBUGFILES = debug_empty.c
+else
+	DEBUGFILES = debug.c
+endif
+
+DEBUGOBJECTS = $(DEBUGFILES:.c=.o)
 
 default: $(CODEHEADERS)
 	@clear
 	@/bin/echo -e "\x1b[31mStarting Compiler.\x1b[0m\n"
-	@rm -rf $(FINAL)
+	@rm -rf $(PROG)
 	@/bin/echo -e "Compiling .o files"
-	@gcc -c $(CODEFILES) -Wall
+	@gcc -c $(CODEFILES) $(DEBUGFILES) -Wall
 	@/bin/echo -e "Linking .o files"
-	@gcc -o $(FINAL) $(CODEOBJECTS)
+	@gcc -o $(PROG) $(CODEOBJECTS) $(DEBUGOBJECTS)
 	@/bin/echo -e "Cleaning up .o files"
 	@rm -rf *.o
 	@/bin/echo -e "\n\x1b[32mDone!\x1b[0m\n"
