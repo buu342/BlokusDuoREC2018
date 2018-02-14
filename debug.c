@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdio_ext.h>
 #include <stdlib.h>
 
 #include "blocks.h"
@@ -62,4 +63,11 @@ void debug_draw_screen(int board[14][14])
             printf("\n\n");
         }
     }
+}
+
+void debug_enter()
+{
+    __fpurge(stdin);
+    char c = getchar();
+    c++;
 }
