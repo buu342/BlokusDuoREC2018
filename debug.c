@@ -6,7 +6,7 @@
 #include "debug.h"
 
 /*------------------------------------
-  Debug functions - Remove when final
+  Debug functions        FINAL = NO
 ------------------------------------*/
 
 void debug_message(char str[100], int variable, int ischar, int wait)
