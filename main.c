@@ -369,7 +369,7 @@ int main()
                             if (test == MOVE_POSSIBLE)
                             {
                                 check_corner(i, j, l, k, board, turn, &corners_left);
-                                printf("%4i) %1x %1x %c %i is a valid move which will yield %d points and %d corners.\n", t, i, j, l, k, score, corners_left);
+                                debug_yield(t, i, j, l, k, score, corners_left);
                                 possible[t][0] = score + corners_left;
                                 possible[t][1] = i;
                                 possible[t][2] = j;
@@ -406,7 +406,7 @@ int main()
         // Play that move
 
         t = best[0];
-        printf("Playing %1x %1x %c %i .\n", possible[t][1], possible[t][2], possible[t][3], possible[t][4]);
+        debug_choice(possible[t][1], possible[t][2], possible[t][3], possible[t][4]);
         play_move(possible[t][1], possible[t][2], possible[t][3], possible[t][4], board, turn, (player == 1 ? pieces_left1 : pieces_left2), (player == 1 ? &score1 : &score2));
 
         for (int i=0;i<2000;i++)
