@@ -71,3 +71,13 @@ void debug_enter()
     char c = getchar();
     c++;
 }
+
+void debug_yield(int num, int move_x, int move_y, char piece, int rot, int score, int corners_left)
+{
+    printf("%4i) %1x %1x %c %i is a valid move which will yield %d points and %d corners.\n", num, move_x, move_y, piece, rot, score, corners_left);
+}
+
+void debug_choice(int move_x, int move_y, char piece, int rot)
+{
+    printf("Playing %1x %1x %c %i .\n", move_x, move_y, piece, rot);
+}
