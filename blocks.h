@@ -9,6 +9,9 @@
 #define cr_cyan    "\x1b[36m"
 #define cr_reset   "\x1b[0m"
 
+#define BOARD_LENGTH 0xE
+#define BOARD_HEIGHT 0xE
+
 #define MOVE_POSSIBLE   1
 #define MOVE_IMPOSSIBLE 0
 #define MOVE_IMPOSSIBLE_USED -1
