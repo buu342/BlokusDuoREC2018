@@ -112,7 +112,7 @@ int main()
             {
                 for (int i=1;i<=0xE;i++)
                 {
-                    if (board[j][i] == 0)
+                    if (board[j-1][i-1] == 0)
                     {
                         for (int k=0;k<8;k++)
                         {
