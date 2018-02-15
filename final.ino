@@ -597,14 +597,16 @@ void loop()
       delay(1);
       int byte_r = Serial.read();
 
-      if (byte_x >= '0' && byte_x <= '9') byte_x = byte_x - '0'; else if (byte_x >= 'a' && byte_x <= 'e') byte_x = byte_x - 'a' + 10;
-      if (byte_y >= '0' && byte_y <= '9') byte_y = byte_y - '0'; else if (byte_y >= 'a' && byte_y <= 'e') byte_y = byte_y - 'a' + 10;
-      if (byte_p >= 'A' && byte_p <= 'U') byte_p = byte_p + 32;
-      if (byte_r >= '0' && byte_r <= '9') byte_r = byte_r - '0';
-
-      int m = 0;
-      char pp[21]={'a'};
-      play_move(byte_x, byte_y, byte_p, byte_r, board, turn, pp, &m);
+      if (byte_p != '0')
+      {
+        if (byte_x >= '0' && byte_x <= '9') byte_x = byte_x - '0'; else if (byte_x >= 'a' && byte_x <= 'e') byte_x = byte_x - 'a' + 10;
+        if (byte_y >= '0' && byte_y <= '9') byte_y = byte_y - '0'; else if (byte_y >= 'a' && byte_y <= 'e') byte_y = byte_y - 'a' + 10;
+        if (byte_p >= 'A' && byte_p <= 'U') byte_p = byte_p + 32;
+        if (byte_r >= '0' && byte_r <= '9') byte_r = byte_r - '0';
+        int m = 0;
+        char pp[21]={'a'};
+        play_move(byte_x, byte_y, byte_p, byte_r, board, turn, pp, &m);
+      }
       turn++;
 
       /////////////////////////////////// Our move ///////////////////////////////////
