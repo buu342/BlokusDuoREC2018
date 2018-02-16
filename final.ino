@@ -1,3 +1,12 @@
+/*------------------------------------
+     Global variables and macros
+------------------------------------*/
+
+#define DEBUG 0
+#define MAX_CHECK 32
+#define MAX_WAIT_CHECK 800000
+#define MAX_WAIT_BEST  900000
+
 #define BOARD_LENGTH 0xE
 #define BOARD_HEIGHT 0xE
 
@@ -10,9 +19,17 @@
 #define MOVE_IMPOSSIBLE_FRST -5
 #define MOVE_IMPOSSIBLE_CORN -6
 
+int board[14][14];
+int turn = 1;
+char mypieces_left[21];
+
+int setup_variables = 1;
+char inByte = 0;
+
+
 /*------------------------------------
          block definitions
-  ------------------------------------*/
+------------------------------------*/
 
 const int  block_a[5][5] = {
   {0, 0, 0, 0, 0},
@@ -185,7 +202,7 @@ const int  block_u[5][5] = {
 
 /*------------------------------------
            Transform array
-  ------------------------------------*/
+------------------------------------*/
 
 void transform_array(int piece[5][5], int rot)
 {
@@ -219,9 +236,10 @@ void transform_array(int piece[5][5], int rot)
 
 }
 
+
 /*------------------------------------
         Move validity checker
-  ------------------------------------*/
+------------------------------------*/
 
 int check_move(int move_x, int move_y, char piece, int rot, int board[14][14], int turn, int *score)
 {
@@ -321,7 +339,7 @@ int check_move(int move_x, int move_y, char piece, int rot, int board[14][14], i
 
 /*------------------------------------
         insert move to a board
-  ------------------------------------*/
+------------------------------------*/
 
 void play_move(int move_x, int move_y, char piece, int rot, int board[14][14], int turn, char pieces_left[22], int *score)
 {
@@ -389,7 +407,7 @@ void play_move(int move_x, int move_y, char piece, int rot, int board[14][14], i
 
 /*------------------------------------
         Count amount of corners
-  ------------------------------------*/
+------------------------------------*/
 
 void check_corner(int move_x, int move_y, char piece, int rot, int board[14][14], int turn, int *corner_count)
 {
@@ -452,6 +470,11 @@ void check_corner(int move_x, int move_y, char piece, int rot, int board[14][14]
     }
 }
 
+
+/*------------------------------------
+         Check available moves
+------------------------------------*/
+
 char *strchr_ar(char *str, int ch)
 {
   do
@@ -466,7 +489,7 @@ char *strchr_ar(char *str, int ch)
 
 /*------------------------------------
             Setup and loop
-  ------------------------------------*/
+------------------------------------*/
 
 void setup()
 {
@@ -477,15 +500,6 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 }
-
-int board[14][14];
-int turn = 1;
-char mypieces_left[21];
-
-int setup_variables = 1;
-char inByte = 0;
-
-#define MAX_CHECK 12
 
 void loop()
 {
@@ -620,10 +634,8 @@ void loop()
       int t = 0, score = 0, corners_left = 0;
       for (int l = 'u'; l >= 'a'; l--)
       {
-        
         if (strchr_ar(mypieces_left, l) == NULL) // check if move has been used up.
           continue;
-
         for (int j = 1; j <= 14; j++)
         {
           for (int i = 1; i <= 14; i++)
@@ -644,30 +656,50 @@ void loop()
                   score = corners_left = 0;
                   t++;
                   unsigned long end_time = micros();
-                  if (end_time-start_time >= 500000)
+                  if (DEBUG == 1)
+                  {
+                    Serial.print("    "); 
+                    Serial.print(end_time-start_time); 
+                    Serial.print("    ");
+                  }
+                  if (end_time-start_time >= MAX_WAIT_CHECK)
                     t = MAX_CHECK;
                 }
+                unsigned long end_time = micros();
+                if (end_time-start_time >= MAX_WAIT_CHECK)
+                    t = MAX_CHECK;
+                if (t >= MAX_CHECK)
+                  break;
               }
             }
+            unsigned long end_time = micros();
+            if (end_time-start_time >= MAX_WAIT_CHECK)
+                t = MAX_CHECK;
             if (t >= MAX_CHECK)
               break;
           }
+          unsigned long end_time = micros();
+          if (end_time-start_time >= MAX_WAIT_CHECK)
+              t = MAX_CHECK;
           if (t >= MAX_CHECK)
             break;
         }
+        unsigned long end_time = micros();
+        if (end_time-start_time >= MAX_WAIT_CHECK)
+            t = MAX_CHECK;
         if (t >= MAX_CHECK)
           break;
       }
-      int ttttttt = 0;
+      int skip_turn = 0;
       if (possible[0][0] == 0)
       {
         Serial.print("0000");
         turn++;
-        ttttttt = 1;
+        skip_turn = 1;
       }
 
       // Find the best move
-      if (ttttttt == 0)
+      if (skip_turn == 0)
       {
         int best[2] = {0, 0};
         for (int i = 0; i < MAX_CHECK; i++)
@@ -675,6 +707,9 @@ void loop()
           {
             best[0] = i;
             best[1] = possible[i][0];
+            unsigned long end_time = micros();
+            if (end_time-start_time >= MAX_WAIT_BEST)
+              break;
           }
           else if (possible[i][0] == 0)
             break;
@@ -686,24 +721,27 @@ void loop()
         int m;
         play_move(possible[t][1], possible[t][2], possible[t][3], possible[t][4], board, turn, mypieces_left, m);
           
-        char final_move[4];
+        char final_move[5];
         final_move[0] = ((possible[t][1] >= 0 && possible[t][1] <= 9) ? possible[t][1] + '0' : possible[t][1] + 'a' - 10);
         final_move[1] = ((possible[t][2] >= 0 && possible[t][2] <= 9) ? possible[t][2] + '0' : possible[t][2] + 'a' - 10);
         final_move[2] = possible[t][3];
         final_move[3] = possible[t][4] + '0';
+        final_move[4] = '\0';
 
         Serial.print(final_move);
 
         turn++;
       }
-      /*unsigned long end_time = micros();
-      Serial.println("");
-      Serial.println("Total time of: ");
-      Serial.print(end_time-start_time);
-      Serial.print(" miliseconds.");
-      Serial.println("");*/
+      if (DEBUG == 1)
+      {
+        unsigned long end_time = micros();
+        Serial.print("     Total time of: ");
+        Serial.print(end_time-start_time);
+        Serial.print(" miliseconds.");
+        Serial.println("");
+      }
     }
-    /*else if (inByte == '7')
+    else if (inByte == '7' && DEBUG == 1)
     {
       for (int j = 0; j < 14; j++)
       {
@@ -719,6 +757,6 @@ void loop()
       Serial.println("");
       for (int i = 0; i < 21; i++)
         Serial.print(mypieces_left[i]);
-    }*/
+    }
   }
 }
