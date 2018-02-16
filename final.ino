@@ -2,10 +2,13 @@
      Global variables and macros
 ------------------------------------*/
 
-#define DEBUG 0
-#define MAX_CHECK 32
-#define MAX_WAIT_CHECK 800000
-#define MAX_WAIT_BEST  900000
+#define DEBUG 0               // Enable/Disable debug mode
+#define MAX_CHECK 32          // Maximum possible moves to check
+#define MAX_WAIT_CHECK 800000 // Maximum time for finding possible moves
+#define MAX_WAIT_BEST  900000 // Maximum time overall (will never exceed this value)
+
+
+// Don't touch below this line
 
 #define BOARD_LENGTH 0xE
 #define BOARD_HEIGHT 0xE
@@ -531,8 +534,10 @@ void loop()
 
   if (Serial.available() > 0)
   {
+    
     // read the incoming byte:
     inByte = Serial.read();
+    
     if (inByte == '0')
     {
       Serial.print("1N2");
